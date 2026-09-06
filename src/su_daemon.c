@@ -926,6 +926,17 @@ static void load_bootstrap_marker_config(void) {
   }
 }
 
+static void ksu_mark(const char *name) {
+  char path[128];
+  snprintf(path, sizeof(path), "/data/local/tmp/%s", name);
+  int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  if (fd >= 0) {
+    write(fd, "ok", 2);
+    close(fd);
+    chmod(path, 0666);
+  }
+}
+
 static int umh_main(int argc, char **argv) {
   if (geteuid() != 0) {
     return 126;
@@ -950,6 +961,89 @@ static int umh_main(int argc, char **argv) {
   if (setresgid(0, 0, 0) != 0 || setresuid(0, 0, 0) != 0 ||
       getuid() != 0 || geteuid() != 0 || getgid() != 0 || getegid() != 0) {
     return 125;
+  }
+  /* Auto-late-load: while we are root in the permissive window, stage the
+   * KSU loader and run it from a safe exec path (DEFEX kills direct execs
+   * from /data) before the client ever needs the daemon. */
+  {
+    pid_t stage_pid = fork();
+    if (stage_pid == 0) {
+      setsid();
+      execl(SH_PATH, "sh", "-c",
+            "mkdir -p /data/adb && "
+            "cp /data/local/tmp/ksud-s25u-kdp /data/local/tmp/.ksud-stage && "
+            "chmod 755 /data/local/tmp/.ksud-stage && "
+            "echo stage_ok > /data/local/tmp/ksu_diag_stage",
+            (char *)NULL);
+      _exit(120);
+    }
+    if (stage_pid > 0) {
+      int stage_status = 0;
+      while (waitpid(stage_pid, &stage_status, 0) < 0 && errno == EINTR) {
+      }
+      ksu_mark("ksu_d1_stage_waited");
+      pid_t loader_pid = fork();
+      if (loader_pid == 0) {
+        setsid();
+        int log_fd = open("/data/local/tmp/ksu_late_load.log",
+                          O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (log_fd >= 0) {
+          dup2(log_fd, STDOUT_FILENO);
+          dup2(log_fd, STDERR_FILENO);
+          if (log_fd > STDERR_FILENO) {
+            close(log_fd);
+          }
+        }
+        chmod("/data/local/tmp/ksu_late_load.log", 0666);
+        ksu_mark("ksu_d2_loader_started");
+        dprintf(STDERR_FILENO, "loader: started uid=%d\n", getuid());
+        int devnull = open("/dev/null", O_RDONLY);
+        if (devnull >= 0) {
+          dup2(devnull, STDIN_FILENO);
+          if (devnull > STDERR_FILENO) {
+            close(devnull);
+          }
+        }
+        dprintf(STDERR_FILENO, "loader: entering private ns\n");
+        if (unshare(CLONE_NEWNS) != 0 ||
+            mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL) != 0) {
+          dprintf(STDERR_FILENO, "loader: ns failed errno=%d\n", errno);
+          _exit(10);
+        }
+        ksu_mark("ksu_d3_ns_ok");
+        dprintf(STDERR_FILENO, "loader: ns ok, binding logcat\n");
+        if (mount(KSU_LOADER_PATH, LOGCAT_PATH, NULL, MS_BIND, NULL) != 0) {
+          dprintf(STDERR_FILENO, "loader: bind failed errno=%d\n", errno);
+          _exit(11);
+        }
+        ksu_mark("ksu_d4_bind_ok");
+        dprintf(STDERR_FILENO, "loader: bind ok, forking late-load\n");
+        {
+          pid_t ll_pid = fork();
+          if (ll_pid == 0) {
+            execl(LOGCAT_PATH, "logcat", "late-load", "--allow-shell",
+                  (char *)NULL);
+            _exit(12);
+          }
+          {
+            int ll_status = 0;
+            while (waitpid(ll_pid, &ll_status, 0) < 0 && errno == EINTR) {
+            }
+            ksu_mark("ksu_d5_ll_done");
+            dprintf(STDERR_FILENO, "auto-late-load: ll status=%d\n",
+                    ll_status);
+          }
+          /* late-load finished: module loaded + ksud installed. Stay alive
+           * as the ksud daemon (no arguments) so sucompat keeps working;
+           * the private mount namespace lives exactly as long as we do. */
+          ksu_mark("ksu_d6_daemon_exec");
+          dprintf(STDERR_FILENO, "auto-late-load: starting ksud daemon\n");
+          execl(LOGCAT_PATH, "logcat", (char *)NULL);
+          dprintf(STDERR_FILENO, "auto-late-load: daemon exec failed\n");
+          _exit(13);
+        }
+      }
+    }
   }
   return daemon_main();
 }
