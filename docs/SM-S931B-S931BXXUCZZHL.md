@@ -309,5 +309,5 @@ each boot's late-load. Operational notes:
 
 ## 12. Scope
 
-Offline only. No hardware run has been performed for this profile yet.
+Hardware tested.
 
