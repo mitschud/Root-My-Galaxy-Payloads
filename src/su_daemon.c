@@ -1251,6 +1251,9 @@ static int payload_runner_main(int argc, char **argv) {
 
 int main(int argc, char **argv) {
   signal(SIGPIPE, SIG_IGN);
+  if (argc >= 2 && strcmp(argv[1], "--ksu-info") == 0) {
+    return verify_kernelsu_control();
+  }
   if (argc >= 2 && strcmp(argv[1], "--run-payload") == 0) {
     return payload_runner_main(argc, argv);
   }
