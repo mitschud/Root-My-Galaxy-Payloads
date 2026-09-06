@@ -1,6 +1,6 @@
 # SM-S931B / S931BXXUCZZHL porting record
 
-**Status: offline port complete, not yet hardware-validated.** Every value
+**Status: Port complete, hardware-validated.** Every value
 below was derived from the exact target kernel Image and its BTF; nothing is
 copied from another build without verification.
 
