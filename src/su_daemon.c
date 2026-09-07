@@ -481,7 +481,7 @@ static int run_kernelsu_late_load(struct su_request *request, int conn) {
       /* Let the downloaded target-specific ksud select its embedded module
        * from the running kernel.  Ephemeral mode avoids replacing an existing
        * /data/adb/ksud while the app only needs the module for this boot. */
-      execl(LOGCAT_PATH, "logcat", "late-load", "--ephemeral",
+      execl(LOGCAT_PATH, "logcat", "late-load", "--allow-shell",
             "--package-name", "me.weishu.kernelsu", (char *)NULL);
       dprintf(STDERR_FILENO, "late-load: exec: %s\n", strerror(errno));
       _exit(12);
