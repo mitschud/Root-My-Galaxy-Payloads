@@ -13,9 +13,9 @@
 #if defined(APP_PAYLOAD) && APP_PAYLOAD
 #define BUILD_VARIANT_LABEL "pa3q-S938BXXUCZZI4-app-physical-p0-oracle"
 #define APP_PHYS_P0_ORACLE 1
-/* Deterministic tracefs KASLR route (shell has readtracefs); P0 oracle
- * remains the fallback when tracefs is unavailable. */
-#define APP_TRACEFS_SLIDE 1
+/* Physical-P0 oracle only: on this device the write window only opens
+ * after the oracle gate/probe writes have run (tracefs-derived slides
+ * skip them and the first raced write fails with window=0). */
 #else
 #define BUILD_VARIANT_LABEL "pa3q-S938BXXUCZZI4-root-umh"
 #endif

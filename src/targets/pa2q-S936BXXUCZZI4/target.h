@@ -13,9 +13,9 @@
 #if defined(APP_PAYLOAD) && APP_PAYLOAD
 #define BUILD_VARIANT_LABEL "pa2q-S936BXXUCZZI4-app-physical-p0-oracle"
 #define APP_PHYS_P0_ORACLE 1
-/* Deterministic tracefs KASLR route (shell has readtracefs); P0 oracle
- * remains the fallback when tracefs is unavailable. */
-#define APP_TRACEFS_SLIDE 1
+/* Physical-P0 oracle only: same pa2q/pa3q 6.6.127 behavior as the S25
+ * Ultra target (tracefs-derived slides skip the oracle gate/probe writes
+ * and the first raced write fails with window=0). */
 #else
 #define BUILD_VARIANT_LABEL "pa2q-S936BXXUCZZI4-root-umh"
 #endif
