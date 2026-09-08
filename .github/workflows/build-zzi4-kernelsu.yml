@@ -127,7 +127,7 @@ jobs:
           set -euxo pipefail
           NDKBIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
           export PATH="$NDKBIN:$PATH"
-          export LIBCLANG_PATH="$NDKBIN"
+          export LIBCLANG_PATH="$NDK/toolchains/llvm/prebuilt/linux-x86_64/lib"
           export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDKBIN/aarch64-linux-android35-clang"
           export CC_aarch64_linux_android="$NDKBIN/aarch64-linux-android35-clang"
           export AR_aarch64_linux_android="$NDKBIN/llvm-ar"
