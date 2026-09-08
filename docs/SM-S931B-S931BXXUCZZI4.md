@@ -125,10 +125,40 @@ are shared, and the chain's load-bearing symbols are identical, so the ZZHL
 artifact happens to work on ZZI4; the ZZI4 profile remains the correct,
 exact-image-derived build (the P0 fingerprint and 7 shifted offsets differ).
 
-## 8. Scope
+## 8. KernelSU module (KSU v3.2.5, ZZI4 vermagic) — built, load-untested
+
+Rebuilt per the ZZHL record section 8: KernelSU `v3.2.5` (commit
+`b0bc817b4e966aa6aa830834eaf6ef765d821d40`) +
+`kernelsu/patches/KernelSU-v3.2.5-samsung-kdp-rkp-defex.patch`, built as an
+external module against the `ghcr.io/ylarod/ddk-min:android15-6.6-20260828`
+DDK tree with the utsrelease replaced by the exact ZZI4 release. CI: GitHub
+Actions (`build-zzi4-kernelsu.yml`), module version reported `32525`.
+
+Post-processing: `llvm-strip -d` (symtab kept for the kallsyms manual
+relocation loader), then `__versions` removed (empty section => kernel skips
+CRC checks; vermagic retains `modversions`, matching the target kernel
+verbatim).
+
+Audit: 221 undefined imports, all resolved in the recovered ZZI4 symbol table
+(vmlinux-to-elf from the exact Image); struct layouts unchanged (BTF
+byte-identical to ZZHL).
+
+```text
+android15-6.6_kernelsu-pa1q-S931BXXUCZZI4-kdp.ko
+size: 327416
+SHA-256: 0dc6681c7524c622d0770ef2701ee5068d98d5981a4b66dbca455efdfeca8edc
+
+ksud-pa1q-S931BXXUCZZI4-kdp
+size: 4878896
+SHA-256: 58f59df7fda9a2547905b297d8ea96300d7761f092dbc7f5a78062461afbadca
+```
+
+On-device late-load validation pending (requires a fresh boot + exploit chain,
+or the app staging this ksud).
+
+## 9. Scope
 
 Offline port + hardware-validated temp-root chain on `S931BXXUCZZI4`.
-KernelSU late-load for this kernel still needs an exact-vermagic (`p33f4ffe`)
-module build (section 8 of the ZZHL record) — the ZZHL ksud/module will not
-late-load on ZZI4 due to vermagic mismatch.
+KernelSU late-load for this kernel uses the exact-vermagic module built above
+(see section 8); on-device module-load validation pending.
 
