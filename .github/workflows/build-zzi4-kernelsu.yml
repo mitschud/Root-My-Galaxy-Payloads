@@ -1,4 +1,4 @@
-name: build-zzi4-kernelsu
+﻿name: build-zzi4-kernelsu
 
 on:
   workflow_dispatch:
@@ -140,11 +140,11 @@ jobs:
           export AR_aarch64_linux_android="$NDKBIN/llvm-ar"
           cd KernelSU/userspace
           cargo build --release --target aarch64-linux-android -p ksud
-          file target/aarch64-linux-android/release/ksud || true
-          sha256sum target/aarch64-linux-android/release/ksud
+          file ../target/aarch64-linux-android/release/ksud
+          sha256sum ../target/aarch64-linux-android/release/ksud
       - name: Upload ksud
         uses: actions/upload-artifact@v4
         with:
           name: ksud-pa1q-S931BXXUCZZI4-kdp
-          path: KernelSU/userspace/target/aarch64-linux-android/release/ksud
+          path: KernelSU/target/aarch64-linux-android/release/ksud
           if-no-files-found: error
