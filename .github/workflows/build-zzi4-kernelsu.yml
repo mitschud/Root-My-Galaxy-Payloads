@@ -68,6 +68,31 @@ jobs:
           (modinfo -F vermagic kernelsu.ko 2>/dev/null) || \
             strings kernelsu.ko | grep -m1 -o '6\.6\.127[^ ]* .*aarch64' || true
           sha256sum kernelsu.ko
+      - name: Upload raw kernelsu.ko (pre-postprocessing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernelsu-zzi4-raw.ko
+          path: /work/KernelSU/kernel/kernelsu.ko
+          if-no-files-found: error
+      - name: Build no-LTO variant
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$(ls -d /opt/ddk/clang/*/bin | head -1):$PATH"
+          export ARCH=arm64 LLVM=1 LLVM_IAS=1
+          cd /work/KernelSU/kernel
+          make -C "$KDIR" M="$PWD" src="$PWD" clean
+          make -C "$KDIR" M="$PWD" src="$PWD" \
+            CONFIG_KSU=m \
+            CONFIG_KSU_SAMSUNG_KDP=y \
+            CONFIG_KSU_SAMSUNG_RKP=y \
+            CONFIG_KSU_SAMSUNG_DEFEX=y \
+            CONFIG_LTO_CLANG= \
+            CONFIG_LTO_CLANG_THIN= \
+            CONFIG_LTO_NONE=y \
+            KBUILD_MODPOST_WARN=1 \
+            modules -j"$(nproc)"
+          ls -la kernelsu.ko
       - name: Upload kernelsu.ko
         uses: actions/upload-artifact@v4
         with:
