@@ -121,13 +121,20 @@ jobs:
           mkdir -p KernelSU/userspace/ksud/bin/aarch64
           cp ko/kernelsu.ko KernelSU/userspace/ksud/bin/aarch64/android15-6.6_kernelsu.ko
           ls -la KernelSU/userspace/ksud/bin/aarch64/
+      - name: Install libclang (bindgen requirement)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libclang-dev
+          LIBCLANG_DIR=$(dirname "$(find /usr/lib -name 'libclang.so*' | head -1)")
+          echo "LIBCLANG_PATH=$LIBCLANG_DIR" >> "$GITHUB_ENV"
       - name: Build ksud
         shell: bash
         run: |
           set -euxo pipefail
           NDKBIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
           export PATH="$NDKBIN:$PATH"
-          export LIBCLANG_PATH="$NDK/toolchains/llvm/prebuilt/linux-x86_64/lib"
           export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDKBIN/aarch64-linux-android35-clang"
           export CC_aarch64_linux_android="$NDKBIN/aarch64-linux-android35-clang"
           export AR_aarch64_linux_android="$NDKBIN/llvm-ar"
