@@ -63,8 +63,8 @@ jobs:
           export PATH="$(ls -d /opt/ddk/clang/*/bin | head -1):$PATH"
           cd /work/KernelSU/kernel
           file kernelsu.ko || true
-          llvm-objcopy --remove-section __versions kernelsu.ko
           llvm-strip -d kernelsu.ko
+          llvm-objcopy --remove-section __versions kernelsu.ko
           (modinfo -F vermagic kernelsu.ko 2>/dev/null) || \
             strings kernelsu.ko | grep -m1 -o '6\.6\.127[^ ]* .*aarch64' || true
           sha256sum kernelsu.ko
