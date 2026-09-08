@@ -143,18 +143,44 @@ Audit: 221 undefined imports, all resolved in the recovered ZZI4 symbol table
 (vmlinux-to-elf from the exact Image); struct layouts unchanged (BTF
 byte-identical to ZZHL).
 
-```text
-android15-6.6_kernelsu-pa1q-S931BXXUCZZI4-kdp.ko
-size: 327416
-SHA-256: 0dc6681c7524c622d0770ef2701ee5068d98d5981a4b66dbca455efdfeca8edc
+## 8b. Hardware module-load validation — PASS (2026-09-08)
 
-ksud-pa1q-S931BXXUCZZI4-kdp
-size: 4878896
-SHA-256: 58f59df7fda9a2547905b297d8ea96300d7761f092dbc7f5a78062461afbadca
+First CI build was thin-LTO (`CONFIG_LTO_CLANG_THIN` from the DDK gki config);
+the kernel rejected it at `init_module` with `ENOEXEC` ("Exec format error") —
+the same stock-THIN-LTO-layout failure documented for the F9360 target.
+Rebuilt with LTO disabled (`CONFIG_LTO_CLANG= CONFIG_LTO_CLANG_THIN=
+CONFIG_LTO_NONE=y`); the no-LTO module loaded successfully through the patched
+`ksud late-load` on the ZZI4 device:
+
+```text
+ksud::late_load: Detected KMI: android15-6.6
+ksud::late_load: kernelsu.ko loaded successfully!
+ksud::late_load: [after load_module] selinux=u:r:ksu:s0
+su -c id  -> uid=0(root) gid=0(root) context=u:r:ksu:s0
+su -c getenforce  -> Enforcing
 ```
 
-On-device late-load validation pending (requires a fresh boot + exploit chain,
-or the app staging this ksud).
+**The shipped pair is the no-LTO build — do not replace it with an
+LTO-flavored build of this module.** LTO modules of this KMI fail to load on
+this kernel with ENOEXEC.
+
+```text
+android15-6.6_kernelsu-pa1q-S931BXXUCZZI4-kdp.ko  (no-LTO, hardware-validated)
+size: 3544056
+SHA-256: f610b0f1da7e8e955b12f519fa3bd99c737b48c2abb15d1370f2e3105af1573f
+
+ksud-pa1q-S931BXXUCZZI4-kdp  (embeds the no-LTO module)
+size: 6419120
+SHA-256: 1e1cb6b861d0d4951b7374c12404eee1fb4c02a77240e0500ca571a302396374
+```
+
+Notes:
+- kptr_restrict=2 on this build zeroes /proc/kallsyms addresses even for
+  root; the KSU loader recovers symbol addresses by its own means (worked as
+  on ZZHL). Plain `insmod` (no manual relocation) cannot load these modules.
+- The helper's `--late-load` staging can race its own copy step when invoked
+  repeatedly; if staging reports ENOENT, pre-create
+  `/data/local/tmp/.ksud-stage` (cp + chmod 755) and re-run.
 
 ## 9. Scope
 
