@@ -57,3 +57,10 @@ is required.
 | P0 fingerprint | re-derived from exact Image (5/32 rows differ) |
 | Payload build | 104,128 bytes, label `pa2q-S936BXXUCZZI4-app-physical-p0-oracle`, import audit clean |
 | On-device validation | pending |
+
+## Tracefs note
+
+Same 6.6.127 pa2q/pa3q behavior as SM-S938B: the write window only opens after
+the P0 oracle gate/probe writes, so the tracefs slide route is disabled for this
+target too (APP_TRACEFS_SLIDE removed; P0-oracle-only). Artifact updated
+(sha256 2b05d2c5...). On-device validation pending.

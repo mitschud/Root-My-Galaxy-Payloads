@@ -61,3 +61,14 @@ rejected by this kernel with ENOEXEC at `init_module`).
 | P0 fingerprint | re-derived from exact Image (4/32 rows differ) |
 | Payload build | 104,128 bytes, label `pa3q-S938BXXUCZZI4-app-physical-p0-oracle`, import audit clean |
 | On-device validation | pending (community testers confirmed the route with adapted fingerprints; first-party validation to follow) |
+
+## On-device validation & tracefs finding (community)
+
+- A community-built pa3q binary (ZZHL-lineage, P0-only slide, identical symbol
+  offsets and byte-identical fingerprint table) roots SM-S938B on this firmware.
+- Our first build (tracefs-first slide) failed 0/24: tracefs slide succeeded
+  (0x0c0000, gate passed) but the first raced physical write hit window=0 - the
+  write window only opens after the P0 oracle gate/probe writes have run, which
+  tracefs-derived slides skip.
+- Fix: APP_TRACEFS_SLIDE removed from this target; payload is P0-oracle-only,
+  matching the proven community flow. Artifact updated (sha256 b6898459...).
