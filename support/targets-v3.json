@@ -333,17 +333,17 @@
       }
     },
     {
-      "payloadId": "pa1q-S931BXXUCZZHL",
-      "displayName": "Galaxy S25 | Kernel 6.6.127 (S931BXXUCZZHL) | tracefs route",
+      "payloadId": "pa1q-S931BXXUCZZI4",
+      "displayName": "Galaxy S25 | Kernel 6.6.127 (S931BXXUCZZI4) | tracefs route",
       "models": ["SM-S931B"],
       "kernelVersions": ["6.6.127"],
       "exploit": {
-        "url": "https://raw.githubusercontent.com/BuSung-dev/Root-My-Galaxy-Payloads/main/artifacts/pa1q-S931BXXUCZZHL/cve-2026-43499-app.so",
+        "url": "https://raw.githubusercontent.com/BuSung-dev/Root-My-Galaxy-Payloads/main/artifacts/pa1q-S931BXXUCZZI4/cve-2026-43499-app.so",
         "size": 104128
       },
       "kernelsu": {
-        "url": "https://raw.githubusercontent.com/BuSung-dev/Root-My-Galaxy-Payloads/main/kernelsu/ksud-s25u-kdp",
-        "size": 6407096
+        "url": "https://raw.githubusercontent.com/BuSung-dev/Root-My-Galaxy-Payloads/main/kernelsu/ksud-pa1q-S931BXXUCZZI4-kdp",
+        "size": 6419120
       }
     }
   ]
